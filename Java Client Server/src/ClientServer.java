@@ -9,20 +9,24 @@
 // Display the results of queries against the bikes table in the bikedb database.
 import java.awt.BorderLayout;
 import java.awt.Color;
-import java.awt.event.ActionListener;
+import java.awt.Dimension;
+import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.sql.SQLException;
-import javax.swing.JFrame;
-import javax.swing.JTextArea;
-import javax.swing.JScrollPane;
-import javax.swing.ScrollPaneConstants;
-import javax.swing.JTable;
-import javax.swing.JOptionPane;
-import javax.swing.JButton;
+
 import javax.swing.Box;
-import javax.swing.*;
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTable;
+import javax.swing.JTextArea;
+import javax.swing.ScrollPaneConstants;
+import javax.swing.border.EmptyBorder;
 
 public class ClientServer extends JFrame 
 {
@@ -35,42 +39,96 @@ public class ClientServer extends JFrame
    // create ResultSetTableModel and GUI
    public ClientServer() 
    {   
-      super( "Displaying Query Results" );
+      super( "SQL Client GUI - (JP - Fall 2018)" );
         
       // create ResultSetTableModel and display database table
       try 
       {
+    	  
+    	 JPanel topLevel = new JPanel(new BorderLayout());
+    	 JPanel topPanel = new JPanel(new FlowLayout());
+    	 JPanel topRightPanel = new JPanel(new FlowLayout());
+    	 JPanel topLeftPanel = new JPanel(new FlowLayout());
+    	 JPanel middlePanel = new JPanel(new FlowLayout());
+    	 JPanel bottomPanel = new JPanel(new BorderLayout());
+    	 
          // create TableModel for results of query SELECT * FROM bikes
          tableModel = new ResultSetTableModel( DEFAULT_QUERY );
 
          // set up JTextArea in which user types queries
-		//	queryArea = new JTextArea( 3, 100);
          queryArea = new JTextArea( DEFAULT_QUERY, 3, 100 );
-         queryArea.setWrapStyleWord( true );
-         queryArea.setLineWrap( true );
+         queryArea.setWrapStyleWord(true);
+         queryArea.setLineWrap(true);
          
          JScrollPane scrollPane = new JScrollPane( queryArea,
             ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED, 
-            ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER );
+            ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED );
          
          // set up JButton for submitting queries
-         JButton submitButton = new JButton( "Submit Query" );
-         submitButton.setBackground(Color.BLUE);
-         submitButton.setForeground(Color.YELLOW);
- 
+         JButton submitButton = new JButton( "Execute SQL Command" );
+         submitButton.setBackground(Color.GREEN);
+         submitButton.setForeground(Color.BLACK);
+         submitButton.setBorder(new EmptyBorder(10,10,10,10));
          
-         // create Box to manage placement of queryArea and 
-         // submitButton in GUI
-         Box box = Box.createHorizontalBox();
-         box.add( scrollPane );
-         box.add( submitButton );
+         // set up JButton for connecting to DB
+         JButton connectDBButton = new JButton( "Connect to Database" );
+         connectDBButton.setBackground(Color.BLUE);
+         connectDBButton.setForeground(Color.YELLOW);
+         connectDBButton.setBorder(new EmptyBorder(10,10,10,10));
+         
+         // set up JButton for clearing SQL command
+         JButton clearSQLButton = new JButton( "Clear SQL Command" );
+         clearSQLButton.setBackground(Color.WHITE);
+         clearSQLButton.setForeground(Color.RED);
+         clearSQLButton.setBorder(new EmptyBorder(10,10,10,10));
+         
+         // set up JLabel for connection status
+         JButton connectionStatus = new JButton("No Connection Now");
+         connectionStatus.setBackground(Color.BLACK);
+         connectionStatus.setForeground(Color.RED);
+         connectionStatus.setBorder(new EmptyBorder(10,10,10,10));
+         connectionStatus.setEnabled(false);
+         
+         JPanel buttonPanel = new JPanel();
+         buttonPanel.add(connectionStatus);
+         buttonPanel.add(connectDBButton);
+         buttonPanel.add(clearSQLButton);
+         buttonPanel.add(submitButton);
+ 
+         // create Box to manage placement of queryArea in GUI
+         Box commandBox = Box.createHorizontalBox();
+         commandBox.setBorder(new EmptyBorder(10,10,10,10));
+         commandBox.add(scrollPane);
+         
+         topRightPanel.add(commandBox);
+         
+         // create Box to manage placement of buttons
+         Box buttonBox = Box.createHorizontalBox();
+         buttonBox.setBorder(new EmptyBorder(10,10,10,10));
+         buttonBox.setPreferredSize(new Dimension(700, 20));
+         buttonBox.add(buttonPanel);
+         
+         middlePanel.add(buttonBox);
 
          // create JTable delegate for tableModel 
          JTable resultTable = new JTable( tableModel );
+         resultTable.setBorder(new EmptyBorder(10,10,10,10));
+         
+         bottomPanel.add(resultTable);
+         
+         topPanel.add(topLeftPanel);
+         topPanel.add(topRightPanel);
          
          // place GUI components on content pane
-         add( box, BorderLayout.NORTH );
-         add( new JScrollPane( resultTable ), BorderLayout.CENTER );
+         topLevel.add(topPanel, BorderLayout.NORTH);
+         topLevel.add(middlePanel, BorderLayout.CENTER);
+         topLevel.add(bottomPanel, BorderLayout.SOUTH);
+         
+         add(topLevel);
+         
+         /*add( commandBox, BorderLayout.LINE_END );
+         add( buttonBox, BorderLayout.LINE_START);
+         add( new JScrollPane(resultTable), BorderLayout.SOUTH );*/
 
          // create event listener for submitButton
          submitButton.addActionListener( 
@@ -114,7 +172,8 @@ public class ClientServer extends JFrame
             }  // end ActionListener inner class          
          ); // end call to addActionListener
 
-         setSize( 600, 300 ); // set window size
+         setSize( 700, 600 ); // set window size
+         //setResizable(false);
          setVisible( true ); // display window  
       } // end try
       catch ( ClassNotFoundException classNotFound ) 
