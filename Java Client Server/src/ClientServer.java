@@ -35,6 +35,9 @@ public class ClientServer extends JFrame
    private ResultSetTableModel tableModel;
    private JTextArea queryArea;
    
+   private String username = "";
+   private String password = "";
+   
    // create ResultSetTableModel and GUI
    public ClientServer() 
    {   
@@ -128,22 +131,45 @@ public class ClientServer extends JFrame
          // create JTable delegate for tableModel 
          JTable resultTable = new JTable( tableModel );
          
+         JButton clearResultButton = new JButton("Clear Result Window");
+         clearResultButton.setBackground(Color.YELLOW);
+         
+         JScrollPane resultPane = new JScrollPane(resultTable);
+         resultPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+         resultPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+         
          setLayout(new FlowLayout());
-         /*add(dropdownBox);
-         add(userPassBox);
-         add(commandBox);
-         add(buttonBox);
-         add(new JScrollPane(resultTable));*/
          add(driverBox);
          add(urlBox);
          add(username);
          add(password);
          add(commandBox);
          add(buttonBox);
-         add(new JScrollPane(resultTable));
+         add(resultPane);
+         add(clearResultButton);
          
          // create event listener for clearSQLButton
-
+         clearSQLButton.addActionListener(
+        		 
+        		 new ActionListener()
+        		 {
+        			 public void actionPerformed(ActionEvent e)
+        			 {
+        				 queryArea.setText("");
+        			 }
+        		 }
+         );
+         
+         clearResultButton.addActionListener(
+        		 
+        		 new ActionListener()
+        		 {
+        			 public void actionPerformed(ActionEvent e)
+        			 {
+        				tableModel.clearTable();
+        			 }
+         });
+         
          // create event listener for submitButton
          submitButton.addActionListener( 
          

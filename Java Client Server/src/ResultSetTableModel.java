@@ -4,14 +4,15 @@
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.sql.Connection;
-import java.sql.Statement;
-import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
-import javax.swing.table.AbstractTableModel;
+import java.sql.Statement;
 import java.util.Properties;
-import javax.sql.DataSource;
+
+import javax.swing.table.AbstractTableModel;
+import javax.swing.table.DefaultTableModel;
+
 import com.mysql.cj.jdbc.MysqlDataSource;
 
 
@@ -192,7 +193,16 @@ public class ResultSetTableModel extends AbstractTableModel
       fireTableStructureChanged();
    } // end method setQuery
 
-
+   // clears the JTable
+   public void clearTable()
+   {
+	   resultSet = null;
+	   metaData = null;
+	   
+	   fireTableRowsDeleted(0, numberOfRows - 1);
+	   numberOfRows = 0;
+   }
+   
 // set new database update-query string
    public void setUpdate( String query ) 
       throws SQLException, IllegalStateException 
@@ -204,13 +214,7 @@ public class ResultSetTableModel extends AbstractTableModel
 
       // specify query and execute it
       res = statement.executeUpdate( query );
-/*
-      // obtain meta data for ResultSet
-      metaData = resultSet.getMetaData();
-      // determine number of rows in ResultSet
-      resultSet.last();                   // move to last row
-      numberOfRows = resultSet.getRow();  // get row number      
-*/    
+
       // notify JTable that model has changed
       fireTableStructureChanged();
    } // end method setUpdate
