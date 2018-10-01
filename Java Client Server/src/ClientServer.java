@@ -7,9 +7,7 @@
 // Code below from Dr. Mark Llewellyn
 
 // Display the results of queries against the bikes table in the bikedb database.
-import java.awt.BorderLayout;
 import java.awt.Color;
-import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -19,14 +17,15 @@ import java.sql.SQLException;
 
 import javax.swing.Box;
 import javax.swing.JButton;
+import javax.swing.JComboBox;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JTextArea;
+import javax.swing.JTextField;
 import javax.swing.ScrollPaneConstants;
-import javax.swing.border.EmptyBorder;
 
 public class ClientServer extends JFrame 
 {
@@ -43,20 +42,12 @@ public class ClientServer extends JFrame
         
       // create ResultSetTableModel and display database table
       try 
-      {
-    	  
-    	 JPanel topLevel = new JPanel(new BorderLayout());
-    	 JPanel topPanel = new JPanel(new FlowLayout());
-    	 JPanel topRightPanel = new JPanel(new FlowLayout());
-    	 JPanel topLeftPanel = new JPanel(new FlowLayout());
-    	 JPanel middlePanel = new JPanel(new FlowLayout());
-    	 JPanel bottomPanel = new JPanel(new BorderLayout());
-    	 
+      { 
          // create TableModel for results of query SELECT * FROM bikes
          tableModel = new ResultSetTableModel( DEFAULT_QUERY );
 
          // set up JTextArea in which user types queries
-         queryArea = new JTextArea( DEFAULT_QUERY, 3, 100 );
+         queryArea = new JTextArea( DEFAULT_QUERY, 3, 50 );
          queryArea.setWrapStyleWord(true);
          queryArea.setLineWrap(true);
          
@@ -68,25 +59,21 @@ public class ClientServer extends JFrame
          JButton submitButton = new JButton( "Execute SQL Command" );
          submitButton.setBackground(Color.GREEN);
          submitButton.setForeground(Color.BLACK);
-         submitButton.setBorder(new EmptyBorder(10,10,10,10));
          
          // set up JButton for connecting to DB
          JButton connectDBButton = new JButton( "Connect to Database" );
          connectDBButton.setBackground(Color.BLUE);
          connectDBButton.setForeground(Color.YELLOW);
-         connectDBButton.setBorder(new EmptyBorder(10,10,10,10));
          
          // set up JButton for clearing SQL command
          JButton clearSQLButton = new JButton( "Clear SQL Command" );
          clearSQLButton.setBackground(Color.WHITE);
          clearSQLButton.setForeground(Color.RED);
-         clearSQLButton.setBorder(new EmptyBorder(10,10,10,10));
          
          // set up JLabel for connection status
          JButton connectionStatus = new JButton("No Connection Now");
          connectionStatus.setBackground(Color.BLACK);
          connectionStatus.setForeground(Color.RED);
-         connectionStatus.setBorder(new EmptyBorder(10,10,10,10));
          connectionStatus.setEnabled(false);
          
          JPanel buttonPanel = new JPanel();
@@ -94,41 +81,68 @@ public class ClientServer extends JFrame
          buttonPanel.add(connectDBButton);
          buttonPanel.add(clearSQLButton);
          buttonPanel.add(submitButton);
+         
+         String[] driverStrings = {"com.mysql.cj.jdbc.Driver",
+        		 				   "oracle.jdbc.driver.OracleDriver",
+        		 				   "com.ibm.db2.jdbc.netDB2Driver",
+        		 				   "com.jdbc.odbc.jdbcOdbcDriver"};
+         String[] urlStrings = {"jdbc:mysql://localhost:3312/project3",
+        		 				"jdbc:mysql://localhost:3310/bikedb",
+        		 				"jdbc:mysql://localhost:3312/test"};
+         
+         JComboBox driverBox = new JComboBox(driverStrings);
+         driverBox.setSelectedIndex(0);
+         
+         JComboBox urlBox = new JComboBox(urlStrings);
+         driverBox.setSelectedIndex(0);
+         
+         JPanel dropdownPanel = new JPanel();
+         dropdownPanel.add(driverBox);
+         dropdownPanel.add(urlBox);
+         
+         JTextField username = new JTextField(10);
+         username.setText("Enter username");
+         JTextField password = new JTextField(10);
+         password.setText("Enter password");
+         
+         JPanel userPassPanel = new JPanel();
+         userPassPanel.add(username);
+         userPassPanel.add(password);
+         
+         // create Box to manage placement of drop downs
+         Box dropdownBox = Box.createHorizontalBox();
+         dropdownBox.add(dropdownPanel);
+         
+         // create Box to manage placement of username/pass
+         Box userPassBox = Box.createHorizontalBox();
+         userPassBox.add(userPassPanel);
  
          // create Box to manage placement of queryArea in GUI
          Box commandBox = Box.createHorizontalBox();
-         commandBox.setBorder(new EmptyBorder(10,10,10,10));
          commandBox.add(scrollPane);
-         
-         topRightPanel.add(commandBox);
          
          // create Box to manage placement of buttons
          Box buttonBox = Box.createHorizontalBox();
-         buttonBox.setBorder(new EmptyBorder(10,10,10,10));
-         buttonBox.setPreferredSize(new Dimension(700, 20));
          buttonBox.add(buttonPanel);
-         
-         middlePanel.add(buttonBox);
 
          // create JTable delegate for tableModel 
          JTable resultTable = new JTable( tableModel );
-         resultTable.setBorder(new EmptyBorder(10,10,10,10));
          
-         bottomPanel.add(resultTable);
+         setLayout(new FlowLayout());
+         /*add(dropdownBox);
+         add(userPassBox);
+         add(commandBox);
+         add(buttonBox);
+         add(new JScrollPane(resultTable));*/
+         add(driverBox);
+         add(urlBox);
+         add(username);
+         add(password);
+         add(commandBox);
+         add(buttonBox);
+         add(new JScrollPane(resultTable));
          
-         topPanel.add(topLeftPanel);
-         topPanel.add(topRightPanel);
-         
-         // place GUI components on content pane
-         topLevel.add(topPanel, BorderLayout.NORTH);
-         topLevel.add(middlePanel, BorderLayout.CENTER);
-         topLevel.add(bottomPanel, BorderLayout.SOUTH);
-         
-         add(topLevel);
-         
-         /*add( commandBox, BorderLayout.LINE_END );
-         add( buttonBox, BorderLayout.LINE_START);
-         add( new JScrollPane(resultTable), BorderLayout.SOUTH );*/
+         // create event listener for clearSQLButton
 
          // create event listener for submitButton
          submitButton.addActionListener( 
@@ -173,7 +187,7 @@ public class ClientServer extends JFrame
          ); // end call to addActionListener
 
          setSize( 700, 600 ); // set window size
-         //setResizable(false);
+         setResizable(false);
          setVisible( true ); // display window  
       } // end try
       catch ( ClassNotFoundException classNotFound ) 
