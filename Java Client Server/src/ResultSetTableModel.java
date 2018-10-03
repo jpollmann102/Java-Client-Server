@@ -11,7 +11,6 @@ import java.sql.Statement;
 import java.util.Properties;
 
 import javax.swing.table.AbstractTableModel;
-import javax.swing.table.DefaultTableModel;
 
 import com.mysql.cj.jdbc.MysqlDataSource;
 
@@ -35,55 +34,11 @@ public class ResultSetTableModel extends AbstractTableModel
    
    // constructor initializes resultSet and obtains its meta data object;
    // determines number of rows
-   public ResultSetTableModel() throws SQLException, ClassNotFoundException
+   public ResultSetTableModel(Connection c, Statement s, boolean isConnected) throws SQLException, ClassNotFoundException
    {         
-	  
-   }
-   
-   public boolean connectToDatabase() throws SQLException
-   {
-	   Properties properties = new Properties();
-	   FileInputStream filein = null;
-	   MysqlDataSource dataSource = null;
-	   
-	   //read properties file
-	   try {
-	    	filein = new FileInputStream("db.properties");
-	    	properties.load(filein);
-	    	dataSource = new MysqlDataSource();
-	    	dataSource.setURL(properties.getProperty("MYSQL_DB_URL"));
-	    	dataSource.setUser(properties.getProperty("MYSQL_DB_USERNAME"));
-	    	dataSource.setPassword(properties.getProperty("MYSQL_DB_PASSWORD")); 	
-	    
-            // connect to database bikes and query database
-  	        // establish connection to database
-   	        Connection connection = dataSource.getConnection();
-	
-            // create Statement to query database
-            statement = connection.createStatement( ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY );
-
-            // update database connection status
-            connectedToDatabase = true;
-            return true;
-	   } //end try
-	   catch (IOException e) 
-	   {
-	   	     e.printStackTrace();
-	   	     return false;
-	   } 
-   }
-   
-   public void queryDatabase(String query)
-   {
-	  if(!connectedToDatabase) return;
-	  // set query and execute it
-	  try {
-		setQuery( query );
-	  } catch (IllegalStateException | SQLException e) 
-	  {
-		// TODO Auto-generated catch block
-		e.printStackTrace();
-	  }
+	   connection = c;
+	   statement = s;
+	  connectedToDatabase = isConnected;
    }
    
    public boolean isConnectedToDatabase() { return connectedToDatabase; }
@@ -115,7 +70,7 @@ public class ResultSetTableModel extends AbstractTableModel
    public int getColumnCount() throws IllegalStateException
    {   
       // ensure database connection is available
-      if ( !connectedToDatabase ) 
+      if ( !connectedToDatabase )
          throw new IllegalStateException( "Not Connected to Database" );
 
       // determine number of columns
@@ -155,7 +110,7 @@ public class ResultSetTableModel extends AbstractTableModel
    public int getRowCount() throws IllegalStateException
    {      
       // ensure database connection is available
-      if ( !connectedToDatabase ) 
+      if ( !connectedToDatabase )
          throw new IllegalStateException( "Not Connected to Database" );
  
       return numberOfRows;
@@ -167,7 +122,7 @@ public class ResultSetTableModel extends AbstractTableModel
    {
       // ensure database connection is available
       if ( !connectedToDatabase ) 
-         throw new IllegalStateException( "Not Connected to Database" );
+         //throw new IllegalStateException( "Not Connected to Database" );
 
       // obtain a value at specified ResultSet row and column
       try 
@@ -212,6 +167,7 @@ public class ResultSetTableModel extends AbstractTableModel
 	   resultSet = null;
 	   metaData = null;
 	   
+	   if(numberOfRows == 0) return;
 	   fireTableRowsDeleted(0, numberOfRows - 1);
 	   numberOfRows = 0;
    }
