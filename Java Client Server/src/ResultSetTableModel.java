@@ -35,12 +35,18 @@ public class ResultSetTableModel extends AbstractTableModel
    
    // constructor initializes resultSet and obtains its meta data object;
    // determines number of rows
-   public ResultSetTableModel( String query ) throws SQLException, ClassNotFoundException
+   public ResultSetTableModel() throws SQLException, ClassNotFoundException
    {         
+	  
+   }
+   
+   public boolean connectToDatabase() throws SQLException
+   {
 	   Properties properties = new Properties();
 	   FileInputStream filein = null;
 	   MysqlDataSource dataSource = null;
-       //read properties file
+	   
+	   //read properties file
 	   try {
 	    	filein = new FileInputStream("db.properties");
 	    	properties.load(filein);
@@ -58,22 +64,29 @@ public class ResultSetTableModel extends AbstractTableModel
 
             // update database connection status
             connectedToDatabase = true;
-
-            // set query and execute it
-            setQuery( query );
-		
-		    //set update and execute it
-		    //setUpdate (query);
-	  } //end try
-      catch ( SQLException sqlException ) 
-      {
-         sqlException.printStackTrace();
-         System.exit( 1 );
-      } // end catch
-      catch (IOException e) {
-   	     e.printStackTrace();
-      }  
-   } // end constructor ResultSetTableModel
+            return true;
+	   } //end try
+	   catch (IOException e) 
+	   {
+	   	     e.printStackTrace();
+	   	     return false;
+	   } 
+   }
+   
+   public void queryDatabase(String query)
+   {
+	  if(!connectedToDatabase) return;
+	  // set query and execute it
+	  try {
+		setQuery( query );
+	  } catch (IllegalStateException | SQLException e) 
+	  {
+		// TODO Auto-generated catch block
+		e.printStackTrace();
+	  }
+   }
+   
+   public boolean isConnectedToDatabase() { return connectedToDatabase; }
 
    // get class that represents column type
    public Class getColumnClass( int column ) throws IllegalStateException

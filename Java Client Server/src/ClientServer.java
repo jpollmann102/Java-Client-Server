@@ -13,6 +13,10 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.sql.SQLException;
 
 import javax.swing.Box;
@@ -21,6 +25,7 @@ import javax.swing.JComboBox;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JPasswordField;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JTextArea;
@@ -46,8 +51,8 @@ public class ClientServer extends JFrame
       // create ResultSetTableModel and display database table
       try 
       { 
-         // create TableModel for results of query SELECT * FROM bikes
-         tableModel = new ResultSetTableModel( DEFAULT_QUERY );
+         // create TableModel for results of query
+         tableModel = new ResultSetTableModel();
 
          // set up JTextArea in which user types queries
          queryArea = new JTextArea( DEFAULT_QUERY, 3, 50 );
@@ -105,7 +110,7 @@ public class ClientServer extends JFrame
          
          JTextField username = new JTextField(10);
          username.setText("Enter username");
-         JTextField password = new JTextField(10);
+         JPasswordField password = new JPasswordField(10);
          password.setText("Enter password");
          
          JPanel userPassPanel = new JPanel();
@@ -169,6 +174,31 @@ public class ClientServer extends JFrame
         				tableModel.clearTable();
         			 }
          });
+         
+         connectDBButton.addActionListener(
+        		 new ActionListener()
+        		 {
+        			 public void actionPerformed(ActionEvent e)
+        			 {
+        				try {
+        					if(username.getText().length() > 0
+        						&& password.getPassword().length > 0)
+        					{
+        						updateProperties(driverBox.getSelectedItem().toString(), urlBox.getSelectedItem().toString(), username.getText(), password.getPassword());
+        						/*if(tableModel.connectToDatabase())
+    							{
+    								connectionStatus.setText("Connected to " + urlBox.getSelectedItem().toString());
+    							}*/
+        					}	
+						} /*catch (SQLException e1) {
+							// TODO Auto-generated catch block
+							e1.printStackTrace();
+						}*/ catch (IOException e1) {
+							// TODO Auto-generated catch block
+							e1.printStackTrace();
+						}
+        			 }
+        		 });
          
          // create event listener for submitButton
          submitButton.addActionListener( 
@@ -251,6 +281,24 @@ public class ClientServer extends JFrame
          } // end WindowAdapter inner class
       ); // end call to addWindowListener
    } // end DisplayQueryResults constructor
+   
+   
+   static void updateProperties(String driver, String url, String username, char[] password) throws IOException
+   {
+	   File f = new File("db.properties");
+	   FileWriter w = new FileWriter(f);
+	   w.write("# MySQL DB Properties\n");
+	   w.write("#\n");
+	   w.write("MYSQL_DB_DRIVER_CLASS=" + driver + "\n");
+	   w.write("MYSQL_DB_URL=" + url + "\n");
+	   w.write("MYSQL_DB_USERNAME=" + username + "\n");
+	   w.write("MYSQL_DB_PASSWORD=");
+	   for(int i = 0; i < password.length; i++)
+	   {
+		   w.write(password[i]);
+	   }
+	   w.close();
+   }
    
    // execute application
    public static void main( String args[] ) 
