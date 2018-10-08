@@ -37,6 +37,7 @@ import javax.swing.JTextField;
 import javax.swing.ScrollPaneConstants;
 
 import com.mysql.cj.jdbc.MysqlDataSource;
+import com.mysql.cj.jdbc.exceptions.SQLError;
 
 public class ClientServer extends JFrame {
 
@@ -47,15 +48,18 @@ public class ClientServer extends JFrame {
 	private Statement statement;
 	String username = "";
 	private String password = "";
+	private JFrame mainFrame;
 	private boolean connectedToDatabase = false;
 
 	// create ResultSetTableModel and GUI
-	public ClientServer() {
+	public ClientServer() throws ClassNotFoundException, SQLException {
 		super("SQL Client GUI - (JP - Fall 2018)");
 
 		// create ResultSetTableModel and display database table
 		try {
-
+			
+			mainFrame = this;
+			
 			// set up JTextArea in which user types queries
 			queryArea = new JTextArea("", 3, 50);
 			queryArea.setWrapStyleWord(true);
@@ -107,7 +111,7 @@ public class ClientServer extends JFrame {
 			dropdownPanel.add(urlBox);
 
 			JTextField username = new JTextField(10);
-			username.setText("");
+			username.setText("username");
 			JPasswordField password = new JPasswordField(10);
 			password.setText("");
 
@@ -131,15 +135,8 @@ public class ClientServer extends JFrame {
 			Box buttonBox = Box.createHorizontalBox();
 			buttonBox.add(buttonPanel);
 
-			// create JTable delegate for tableModel
-			resultTable = new JTable();
-
 			JButton clearResultButton = new JButton("Clear Result Window");
 			clearResultButton.setBackground(Color.YELLOW);
-
-			JScrollPane resultPane = new JScrollPane(resultTable);
-			resultPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
-			resultPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
 
 			setLayout(new FlowLayout());
 			add(driverBox);
@@ -148,8 +145,6 @@ public class ClientServer extends JFrame {
 			add(password);
 			add(commandBox);
 			add(buttonBox);
-			add(resultPane);
-			add(clearResultButton);
 
 			// create event listener for clearSQLButton
 			clearSQLButton.addActionListener(new ActionListener() {
@@ -166,12 +161,26 @@ public class ClientServer extends JFrame {
 
 			connectDBButton.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
+					if(connectedToDatabase) disconnectFromDatabase();
 					try {
 						if (username.getText().length() > 0 && password.getPassword().length > 0) {
 							updateProperties(driverBox.getSelectedItem().toString(),
 									urlBox.getSelectedItem().toString(), username.getText(), password.getPassword());
 							if (connectToDatabase()) {
 								connectionStatus.setText("Connected to " + urlBox.getSelectedItem().toString());
+								try {
+									tableModel = new ResultSetTableModel("SELECT * FROM bikes WHERE 1 = 0", connection, statement, connectedToDatabase);
+									resultTable = new JTable(tableModel);
+									JScrollPane resultPane = new JScrollPane(resultTable);
+									resultPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+									resultPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+									mainFrame.add(resultPane);
+									mainFrame.add(clearResultButton);
+									//resultTable.repaint();
+								} catch (ClassNotFoundException e1) {
+									// TODO Auto-generated catch block
+									e1.printStackTrace();
+								}
 							}
 						}
 					} catch (IOException e1) {
@@ -190,18 +199,9 @@ public class ClientServer extends JFrame {
 					new ActionListener() {
 						// pass query to table model
 						public void actionPerformed(ActionEvent event) {
-							try {
-								tableModel = new ResultSetTableModel(connection, statement, connectedToDatabase);
-								System.out.println("created table model");
-							} catch (ClassNotFoundException | SQLException e) {
-								// TODO Auto-generated catch block
-								e.printStackTrace();
-							}
 							// perform a new query
 							try {
 								tableModel.setQuery(queryArea.getText());
-								System.out.println("Set the query");
-								resultTable = new JTable(tableModel);
 							} // end try
 							catch (SQLException sqlException) {
 								JOptionPane.showMessageDialog(null, sqlException.getMessage(), "Database error",
@@ -211,7 +211,6 @@ public class ClientServer extends JFrame {
 								// by executing default query
 								try {
 									tableModel.setQuery("SELECT * FROM bikes");
-									resultTable = new JTable(tableModel);
 									queryArea.setText("SELECT * FROM bikes");
 								} // end try
 								catch (SQLException sqlException2) {
@@ -311,8 +310,20 @@ public class ClientServer extends JFrame {
 		}
 	}
 	
+	private void disconnectFromDatabase()
+	{
+		try {
+			statement.close();
+			connection.close();
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		connectedToDatabase = false;
+	}
+	
 	// execute application
-	public static void main(String args[]) {
+	public static void main(String args[]) throws ClassNotFoundException, SQLException {
 		new ClientServer();
 	} // end main
 } // end class DisplayQueryResults
